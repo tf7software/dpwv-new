@@ -43,6 +43,11 @@
             cursor: not-allowed;
             background-color: #e9ecef;
         }
+        .movie img {
+            max-width: 100px;
+            height: auto;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -62,21 +67,30 @@
     <script>
         const moviesPerPage = 10; // Number of movies to display per page
         let currentPage = 1;
-        let totalPages = 1;
         let allMovies = []; // Store all movies here
+        let totalPages = 1; // Total number of pages (for pagination)
 
-        function fetchMovies(page) {
-            fetch(`https://vidsrc.xyz/movies/latest/page-${page}.json`)
-                .then(response => response.json())
-                .then(data => {
-                    totalPages = data.total_pages || 1;
-                    allMovies = data.result;
-                    displayMovies(allMovies);
-                    updatePaginationButtons();
-                })
-                .catch(error => {
-                    console.error('Error fetching movies:', error);
-                });
+        function fetchAllMovies() {
+            let page = 1;
+            function fetchPage() {
+                fetch(`movie.php?page=${page}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            allMovies = allMovies.concat(data);
+                            page++;
+                            fetchPage(); // Fetch the next page
+                        } else {
+                            displayMovies(allMovies);
+                            updatePaginationButtons();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching movies:', error);
+                        displayMovies(allMovies); // Display any movies fetched so far
+                    });
+            }
+            fetchPage(); // Start fetching the first page
         }
 
         function displayMovies(movies) {
@@ -89,20 +103,21 @@
                 const movieElement = document.createElement('div');
                 movieElement.className = 'movie';
                 movieElement.innerHTML = `
+                    <img src="${movie.poster}" alt="${movie.title}">
                     <h2>${movie.title}</h2>
                     <p><strong>IMDB ID:</strong> ${movie.imdb_id}</p>
                     <p><strong>TMDB ID:</strong> ${movie.tmdb_id}</p>
-                    <p><strong>Quality:</strong> ${movie.quality}</p>
-                    <p><a href="${movie.embed_url}" target="_blank">Watch (IMDB)</a></p>
-                    <p><a href="${movie.embed_url_tmdb}" target="_blank">Watch (TMDB)</a></p>
+                    <p><strong>IMDB Embed:</strong> <a href="${movie.imdb_embed}" target="_blank">Watch</a></p>
+                    <p><strong>TMDB Embed:</strong> <a href="${movie.tmdb_embed}" target="_blank">Watch</a></p>
                 `;
                 moviesContainer.appendChild(movieElement);
             });
         }
 
         function updatePaginationButtons() {
+            const totalPagesToDisplay = Math.ceil(allMovies.length / moviesPerPage);
             document.getElementById('prev-page').disabled = currentPage === 1;
-            document.getElementById('next-page').disabled = currentPage >= Math.ceil(allMovies.length / moviesPerPage);
+            document.getElementById('next-page').disabled = currentPage >= totalPagesToDisplay;
         }
 
         document.getElementById('next-page').addEventListener('click', () => {
@@ -125,12 +140,12 @@
             const query = this.value.toLowerCase();
             const filteredMovies = allMovies.filter(movie => movie.title.toLowerCase().includes(query));
             displayMovies(filteredMovies);
-            currentPage = 1;
+            currentPage = 1; // Reset to the first page of the filtered results
             updatePaginationButtons();
         });
 
         // Initial fetch
-        fetchMovies(currentPage);
+        fetchAllMovies();
     </script>
 </body>
 </html>
