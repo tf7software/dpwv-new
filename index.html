@@ -26,18 +26,50 @@
         .movie a:hover {
             text-decoration: underline;
         }
+        #search-bar {
+            margin-bottom: 20px;
+        }
+        .pagination {
+            margin-top: 20px;
+        }
+        .pagination button {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+        .pagination button:disabled {
+            cursor: not-allowed;
+            background-color: #e9ecef;
+        }
     </style>
 </head>
 <body>
     <h1>Latest Movies</h1>
+    
+    <div id="search-bar">
+        <input type="text" id="search-input" placeholder="Search movies by name">
+    </div>
+    
     <div id="movies"></div>
+    
+    <div class="pagination">
+        <button id="prev-page" disabled>Previous</button>
+        <button id="next-page">Next</button>
+    </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            fetch('https://vidsrc.xyz/movies/latest/page-1.json')
+        let currentPage = 1;
+        let totalPages = 1;
+
+        function fetchMovies(page) {
+            fetch(`https://vidsrc.xyz/movies/latest/page-${page}.json`)
                 .then(response => response.json())
                 .then(data => {
+                    totalPages = data.total_pages || 1;
                     const moviesContainer = document.getElementById('movies');
+                    moviesContainer.innerHTML = '';
                     data.result.forEach(movie => {
                         const movieElement = document.createElement('div');
                         movieElement.className = 'movie';
@@ -51,11 +83,41 @@
                         `;
                         moviesContainer.appendChild(movieElement);
                     });
+
+                    // Update pagination buttons
+                    document.getElementById('prev-page').disabled = page === 1;
+                    document.getElementById('next-page').disabled = page === totalPages;
                 })
                 .catch(error => {
                     console.error('Error fetching movies:', error);
                 });
+        }
+
+        document.getElementById('next-page').addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                fetchMovies(currentPage);
+            }
         });
+
+        document.getElementById('prev-page').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                fetchMovies(currentPage);
+            }
+        });
+
+        document.getElementById('search-input').addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            const movies = document.querySelectorAll('.movie');
+            movies.forEach(movie => {
+                const title = movie.querySelector('h2').textContent.toLowerCase();
+                movie.style.display = title.includes(query) ? 'block' : 'none';
+            });
+        });
+
+        // Initial fetch
+        fetchMovies(currentPage);
     </script>
 </body>
 </html>
