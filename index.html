@@ -60,60 +60,73 @@
     </div>
 
     <script>
+        const moviesPerPage = 10; // Number of movies to display per page
         let currentPage = 1;
         let totalPages = 1;
+        let allMovies = []; // Store all movies here
 
         function fetchMovies(page) {
             fetch(`https://vidsrc.xyz/movies/latest/page-${page}.json`)
                 .then(response => response.json())
                 .then(data => {
                     totalPages = data.total_pages || 1;
-                    const moviesContainer = document.getElementById('movies');
-                    moviesContainer.innerHTML = '';
-                    data.result.forEach(movie => {
-                        const movieElement = document.createElement('div');
-                        movieElement.className = 'movie';
-                        movieElement.innerHTML = `
-                            <h2>${movie.title}</h2>
-                            <p><strong>IMDB ID:</strong> ${movie.imdb_id}</p>
-                            <p><strong>TMDB ID:</strong> ${movie.tmdb_id}</p>
-                            <p><strong>Quality:</strong> ${movie.quality}</p>
-                            <p><a href="${movie.embed_url}" target="_blank">Watch (IMDB)</a></p>
-                            <p><a href="${movie.embed_url_tmdb}" target="_blank">Watch (TMDB)</a></p>
-                        `;
-                        moviesContainer.appendChild(movieElement);
-                    });
-
-                    // Update pagination buttons
-                    document.getElementById('prev-page').disabled = page === 1;
-                    document.getElementById('next-page').disabled = page === totalPages;
+                    allMovies = data.result;
+                    displayMovies(allMovies);
+                    updatePaginationButtons();
                 })
                 .catch(error => {
                     console.error('Error fetching movies:', error);
                 });
         }
 
+        function displayMovies(movies) {
+            const moviesContainer = document.getElementById('movies');
+            moviesContainer.innerHTML = '';
+            const startIndex = (currentPage - 1) * moviesPerPage;
+            const endIndex = Math.min(startIndex + moviesPerPage, movies.length);
+            const moviesToDisplay = movies.slice(startIndex, endIndex);
+            moviesToDisplay.forEach(movie => {
+                const movieElement = document.createElement('div');
+                movieElement.className = 'movie';
+                movieElement.innerHTML = `
+                    <h2>${movie.title}</h2>
+                    <p><strong>IMDB ID:</strong> ${movie.imdb_id}</p>
+                    <p><strong>TMDB ID:</strong> ${movie.tmdb_id}</p>
+                    <p><strong>Quality:</strong> ${movie.quality}</p>
+                    <p><a href="${movie.embed_url}" target="_blank">Watch (IMDB)</a></p>
+                    <p><a href="${movie.embed_url_tmdb}" target="_blank">Watch (TMDB)</a></p>
+                `;
+                moviesContainer.appendChild(movieElement);
+            });
+        }
+
+        function updatePaginationButtons() {
+            document.getElementById('prev-page').disabled = currentPage === 1;
+            document.getElementById('next-page').disabled = currentPage >= Math.ceil(allMovies.length / moviesPerPage);
+        }
+
         document.getElementById('next-page').addEventListener('click', () => {
-            if (currentPage < totalPages) {
+            if (currentPage < Math.ceil(allMovies.length / moviesPerPage)) {
                 currentPage++;
-                fetchMovies(currentPage);
+                displayMovies(allMovies);
+                updatePaginationButtons();
             }
         });
 
         document.getElementById('prev-page').addEventListener('click', () => {
             if (currentPage > 1) {
                 currentPage--;
-                fetchMovies(currentPage);
+                displayMovies(allMovies);
+                updatePaginationButtons();
             }
         });
 
         document.getElementById('search-input').addEventListener('input', function() {
             const query = this.value.toLowerCase();
-            const movies = document.querySelectorAll('.movie');
-            movies.forEach(movie => {
-                const title = movie.querySelector('h2').textContent.toLowerCase();
-                movie.style.display = title.includes(query) ? 'block' : 'none';
-            });
+            const filteredMovies = allMovies.filter(movie => movie.title.toLowerCase().includes(query));
+            displayMovies(filteredMovies);
+            currentPage = 1;
+            updatePaginationButtons();
         });
 
         // Initial fetch
