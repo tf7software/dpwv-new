@@ -29,36 +29,19 @@
             background-color: #222;
             color: #fff;
         }
-        .movie-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
+        .movie-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
         }
         .movie-item {
-            position: relative;
-            width: 150px;
-            cursor: pointer;
-            overflow: hidden;
-        }
-        .movie-item img {
-            width: 100%;
-            height: auto;
-            transition: transform 0.3s ease;
-        }
-        .movie-item:hover img {
-            transform: scale(1.1);
-        }
-        .movie-item h3 {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            color: #fff;
-            text-align: center;
             padding: 10px;
-            margin: 0;
+            border-bottom: 1px solid #555;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .movie-item:hover {
+            background-color: #333;
         }
         .player-container {
             position: fixed;
@@ -95,9 +78,9 @@
         <div class="search-bar">
             <input type="text" id="search" placeholder="Search for movies...">
         </div>
-        <div class="movie-grid" id="movie-grid">
+        <ul class="movie-list" id="movie-list">
             <!-- Movie items will be added here by JavaScript -->
-        </div>
+        </ul>
     </div>
 
     <div class="player-container" id="player-container">
@@ -115,20 +98,16 @@
         }
 
         function displayMovies(movies) {
-            const movieGrid = document.getElementById('movie-grid');
-            movieGrid.innerHTML = ''; // Clear previous results
+            const movieList = document.getElementById('movie-list');
+            movieList.innerHTML = ''; // Clear previous results
 
             movies.forEach(movie => {
-                const movieItem = document.createElement('div');
+                const movieItem = document.createElement('li');
                 movieItem.classList.add('movie-item');
+                movieItem.textContent = movie.Title;
                 movieItem.onclick = () => showPlayer(movie.imdbID);
 
-                movieItem.innerHTML = `
-                    <img src="${movie.Poster !== 'N/A' ? movie.Poster : 'https://via.placeholder.com/150x225?text=No+Poster'}" alt="${movie.Title}">
-                    <h3>${movie.Title}</h3>
-                `;
-
-                movieGrid.appendChild(movieItem);
+                movieList.appendChild(movieItem);
             });
         }
 
@@ -152,7 +131,7 @@
                 const movies = await fetchMovies(query);
                 displayMovies(movies);
             } else {
-                document.getElementById('movie-grid').innerHTML = '';
+                document.getElementById('movie-list').innerHTML = '';
             }
         });
 
