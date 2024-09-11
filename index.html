@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movies List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        .movie {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .movie h2 {
+            margin: 0 0 10px;
+        }
+        .movie a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+        .movie a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Latest Movies</h1>
+    <div id="movies"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('https://vidsrc.xyz/movies/latest/page-1.json')
+                .then(response => response.json())
+                .then(data => {
+                    const moviesContainer = document.getElementById('movies');
+                    data.result.forEach(movie => {
+                        const movieElement = document.createElement('div');
+                        movieElement.className = 'movie';
+                        movieElement.innerHTML = `
+                            <h2>${movie.title}</h2>
+                            <p><strong>IMDB ID:</strong> ${movie.imdb_id}</p>
+                            <p><strong>TMDB ID:</strong> ${movie.tmdb_id}</p>
+                            <p><strong>Quality:</strong> ${movie.quality}</p>
+                            <p><a href="${movie.embed_url}" target="_blank">Watch (IMDB)</a></p>
+                            <p><a href="${movie.embed_url_tmdb}" target="_blank">Watch (TMDB)</a></p>
+                        `;
+                        moviesContainer.appendChild(movieElement);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching movies:', error);
+                });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movies List</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s, color 0.3s;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        label, input, button {
+            display: block;
+            width: calc(100% - 22px);
+            margin: 10px auto;
+            font-size: 16px;
+        }
+        input[type="text"] {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            background-color: #007bff;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .movie {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .movie h2 {
+            margin: 0 0 10px;
+        }
+        .movie a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+        .movie a:hover {
+            text-decoration: underline;
+        }
+        .theme-switcher {
+            margin-top: 10px;
+            cursor: pointer;
+            font-size: 24px;
+            color: var(--icon-color);
+            transition: color 0.3s;
+            text-align: center;
+        }
+        .dark-mode {
+            --bg-color: #333;
+            --text-color: #f5f5f5;
+            --icon-color: #f5f5f5;
+        }
+        .light-mode {
+            --bg-color: #f5f5f5;
+            --text-color: #333;
+            --icon-color: #333;
+        }
+    </style>
+</head>
+<body class="light-mode">
+    <div class="container">
+        <img src="logo.png" alt="Movie App Logo" class="logo" style="display: block; margin: 0 auto 20px auto; width: 200px;">
+        <h1>Search Movies</h1>
+        <label for="search">Search by Movie Name:</label>
+        <input type="text" id="search" placeholder="e.g., Inception">
+        <button onclick="searchMovies()">Search</button>
+
+        <div id="movies"></div>
+
+        <div class="theme-switcher" onclick="toggleTheme()">
+            <i id="theme-icon" class="fas fa-moon"></i>
+        </div>
+    </div>
+
+    <script>
+        function searchMovies() {
+            const query = document.getElementById('search').value;
+            const moviesContainer = document.getElementById('movies');
+            moviesContainer.innerHTML = ''; // Clear previous results
+            fetch(`https://vidsrc.xyz/movies/search/page-1.json?query=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    data.result.forEach(movie => {
+                        const movieElement = document.createElement('div');
+                        movieElement.className = 'movie';
+                        movieElement.innerHTML = `
+                            <h2>${movie.title}</h2>
+                            <p><strong>IMDB ID:</strong> ${movie.imdb_id}</p>
+                            <p><a href="https://www.imdb.com/title/${movie.imdb_id}/" target="_blank">Watch on IMDB</a></p>
+                        `;
+                        moviesContainer.appendChild(movieElement);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching movies:', error);
+                    moviesContainer.innerHTML = '<p>Error fetching movies. Please try again later.</p>';
+                });
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('theme-icon');
+
+            if (body.classList.contains('light-mode')) {
+                body.classList.remove('light-mode');
+                body.classList.add('dark-mode');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            } else {
+                body.classList.remove('dark-mode');
+                body.classList.add('light-mode');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+            }
+        }
+
+        // Load theme from URL if provided
+        window.onload = function() {
+            const params = new URLSearchParams(window.location.search);
+            const theme = params.get('theme');
+            if (theme === 'dark') {
+                document.body.classList.remove('light-mode');
+                document.body.classList.add('dark-mode');
+                document.getElementById('theme-icon').classList.remove('fa-moon');
+                document.getElementById('theme-icon').classList.add('fa-sun');
+            }
+        };
+    </script>
+</body>
+</html>
